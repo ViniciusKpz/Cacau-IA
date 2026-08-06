@@ -1,10 +1,10 @@
-# 🍫 CacauIA — Assistente Virtual CLI para Linux
+# CacauIA — Assistente Virtual CLI para Linux
 
 A **CacauIA** é uma assistente de linha de comando (CLI) modular para Linux. Ela permite realizar pesquisas rápidas na web, resumir conteúdos utilizando modelos locais via Ollama, controlar atalhos de aplicativos e verificar informações de sistema.
 
 ---
 
-## 🚀 Requisitos Prévios
+## Requisitos Prévios
 
 Antes de instalar, certifique-se de ter os seguintes pacotes instalados no seu sistema:
 
@@ -14,7 +14,7 @@ Antes de instalar, certifique-se de ter os seguintes pacotes instalados no seu s
 
 ---
 
-## 🛠️ Passo a Passo de Instalação
+## Passo a Passo de Instalação
 
 ### 1. Clonar o repositório
 ```bash
@@ -42,7 +42,7 @@ ollama run llama3.2
 
 ---
 
-## 🌐 Criando o Comando Global `cacau`
+## Criando o Comando Global `cacau`
 
 Para conseguir executar a CacauIA de qualquer diretório no terminal digitando apenas `cacau`, crie o atalho global no sistema:
 
@@ -64,7 +64,7 @@ sudo chmod +x /usr/local/bin/cacau
 
 ---
 
-## 📌 Como Usar
+## Como Usar
 
 Exemplos de comandos disponíveis:
 
@@ -80,7 +80,7 @@ Exemplos de comandos disponíveis:
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```text
 
