@@ -28,25 +28,25 @@ def main():
         if argumentos:
             bot.abrir_aplicativo(" ".join(argumentos))
         else:
-            print("⚠️ Uso: cacau app <nome_do_app>")
+            print("⚠️ Uso: python main.py app <nome_do_app>")
 
     elif comando in bot.ajuda.comandos_map["buscar"]:
         if argumentos:
             bot.pesquisar_e_salvar(" ".join(argumentos))
         else:
-            print("⚠️ Uso: cacau buscar <termo>")
+            print("⚠️ Uso: python main.py buscar <termo>")
 
     elif comando in bot.ajuda.comandos_map["ver"]:
         if argumentos:
             bot.abrir_arquivo(" ".join(argumentos))
         else:
-            print("⚠️ Uso: cacau ver <nome_do_arquivo>")
+            print("⚠️ Uso: python main.py ver <nome_do_arquivo>")
 
     elif comando in bot.ajuda.comandos_map["excluir"]:
         if argumentos:
             bot.excluir_pesquisa(" ".join(argumentos))
         else:
-            print("⚠️ Uso: cacau excluir <termo_ou_todas>")
+            print("⚠️ Uso: python main.py excluir <termo_ou_todas>")
 
     else:
         if not bot.ajuda.sugerir_comando(comando):

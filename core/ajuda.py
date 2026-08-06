@@ -38,6 +38,6 @@ class AjudaCacauIA:
         if correspondencias:
             sugestao = correspondencias[0]
             print(f"🤔 Acho que você quis dizer '{sugestao}'?")
-            print(f"👉 Exemplo: cacau {sugestao}")
+            print(f"👉 Exemplo: python main.py {sugestao}")
             return True
         return False
