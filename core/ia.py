@@ -93,7 +93,7 @@ JSON:"""
             res = requests.post(
                 self.url_generate,
                 json={"model": self.modelo, "prompt": prompt, "stream": False},
-                timeout=30
+                timeout=120
             )
             if res.status_code == 200:
                 resumo = res.json().get("response", "").strip()
