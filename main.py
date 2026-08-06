@@ -47,6 +47,9 @@ def main():
             bot.excluir_pesquisa(" ".join(argumentos))
         else:
             print("⚠️ Uso: python main.py excluir <termo_ou_todas>")
+    
+    elif comando in bot.ajuda.comandos_map.get("chat", ["chat"]):
+        bot.iniciar_chat()
 
     else:
         if not bot.ajuda.sugerir_comando(comando):
