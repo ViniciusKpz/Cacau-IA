@@ -83,11 +83,11 @@ class CacauIA:
             with DDGS() as ddgs:
                 resultados = list(ddgs.text(termo, max_results=5))
         except Exception as e:
-            print(f"❌ Erro na busca: {e}")
+            print(f"❌ Erro na busca: {e}\n")
             return
 
         if not resultados:
-            print("⚠️ Nenhum resultado encontrado.")
+            print("⚠️ Nenhum resultado encontrado.\n")
             return
 
         texto_bruto = ""
@@ -103,8 +103,13 @@ class CacauIA:
         with open(caminho_completo, "w", encoding="utf-8") as f:
             f.write(conteudo_final)
 
-        print(f"✨ Pesquisa salva em: {caminho_completo}")
+        # Printa o resultado direto no terminal para você não ter que dar 'cacau ver'
+        print(f"\n✨ Resultado encontrado e salvo em: {caminho_completo}\n")
+        print("="*40)
+        print(conteudo_final)
+        print("="*40 + "\n")
 
+        
     def abrir_arquivo(self, nome_entrada: str):
         nome_limpo = nome_entrada.lower().strip().replace(" ", "_")
         if not nome_limpo.endswith(".txt"):

@@ -1,5 +1,9 @@
-import requests
 import json
+import warnings
+import requests
+
+# Silencia o aviso de renomeação da biblioteca DuckDuckGo
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
 
 class IAEngine:
     def __init__(self, modelo="llama3.2", url="http://localhost:11434"):
@@ -8,7 +12,7 @@ class IAEngine:
         self.url_chat = f"{url}/api/chat"
         self.disponivel = self._verificar_ollama(url)
         self.historico = [
-            {"role": "system", "content": "Você é a CacauIA, uma assistente virtual focada em Linux. Responda de forma direta, simpática e amigável."}
+            {"role": "system", "content": "Você é a CacauIA, uma assistente virtual focada em Linux e tecnologia. Responda de forma direta, simpática e objetiva."}
         ]
 
     def _verificar_ollama(self, url: str) -> bool:
@@ -47,16 +51,16 @@ class IAEngine:
         if not self.disponivel:
             return {"acao": "chat", "parametro": texto}
 
-        prompt = f"""Analise a frase do usuário e retorne APENAS um objeto JSON no formato exato:
+        prompt = f"""Analise a frase do usuário e classifique o tipo de pedido. Retorne APENAS um objeto JSON no formato exato:
 {{"acao": "<NOME_DA_ACAO>", "parametro": "<PARAMETRO>"}}
 
 Ações válidas:
-- "app": abrir um aplicativo (parametro = nome do programa, ex: firefox, spotify, alacritty)
-- "buscar": pesquisar algo na web (parametro = termo da pesquisa)
-- "relogio": ver horas ou data (parametro = "")
-- "ver": ler um arquivo de pesquisa salvo (parametro = nome do termo)
-- "excluir": apagar arquivos gravados (parametro = termo ou "todas")
-- "chat": qualquer outra conversa, dúvida ou interação normal
+- "buscar": USE SOMENTE se o usuário pedir explicitamente para pesquisar/buscar na internet (ex: "pesquise sobre X", "busque na web Y", "procure no google Z").
+- "app": abrir um aplicativo (ex: "abre o firefox", "inicia o spotify").
+- "relogio": ver horas ou data atual (ex: "que horas sao", "qual a data").
+- "ver": ler um arquivo de pesquisa salvo (ex: "ve o arquivo X", "le a pesquisa Y").
+- "excluir": apagar arquivos gravados (ex: "deleta as pesquisas", "apaga o arquivo Z").
+- "chat": QUALQUER OUTRA PERGUNTA, dúvida, conversa, explicação, conceito ou cálculo matematico (ex: "o que e sujeito", "quanto e 10 + 10", "me explica o kernel").
 
 Frase: "{texto}"
 JSON:"""
@@ -89,7 +93,7 @@ JSON:"""
             res = requests.post(
                 self.url_generate,
                 json={"model": self.modelo, "prompt": prompt, "stream": False},
-                timeout=20
+                timeout=30
             )
             if res.status_code == 200:
                 resumo = res.json().get("response", "").strip()
