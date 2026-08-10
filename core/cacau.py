@@ -44,6 +44,30 @@ class CacauIA:
                     self.abrir_aplicativo(param)
                 elif acao == "buscar" and param:
                     self.pesquisar_e_salvar(param)
+                elif acao == "analisar" and param:
+                    print(f"📂 [CacauIA] Inspecionando '{param}'...")
+                    import importlib.util
+                    from pathlib import Path
+
+                    raiz = Path(__file__).resolve().parent.parent
+                    caminho_script = raiz / ".funcoes" / "navegar" / "analise.py"
+
+                    spec = importlib.util.spec_from_file_location("analise_modulo", caminho_script)
+                    modulo_navegar = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(modulo_navegar)
+
+                    analisar_caminho = modulo_navegar.analisar_caminho
+
+                    dados_extraidos = analisar_caminho(param)
+
+                    prompt_contexto = (
+                        f"O usuário pediu para analisar o caminho '{param}'. "
+                        f"Abaixo estão os dados coletados do sistema:\n\n{dados_extraidos}\n\n"
+                        f"Faça um resumo explicativo e amigável sobre o que é este projeto ou arquivo."
+                    )
+
+                    resposta = self.ia.conversar(prompt_contexto)
+                    print(f"\n🍫 \033[1;33mCacauIA >\033[0m {resposta}\n")
                 elif acao == "relogio":
                     self.mostrar_relogio()
                 elif acao == "ver" and param:

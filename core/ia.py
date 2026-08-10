@@ -55,10 +55,11 @@ class IAEngine:
 {{"acao": "<NOME_DA_ACAO>", "parametro": "<PARAMETRO>"}}
 
 Ações válidas:
+- "analisar": USE para qualquer pedido de ler, ver, inspecionar, olhar ou resumir PASTAS, DIRETÓRIOS ou ARQUIVOS do sistema (ex: "analisa ~/game", "oq tem em ~/Jogos", "ve o arquivo script.py", "olha o README.md").
+- "ver": USE SOMENTE se o usuário pedir explicitamente para abrir um RELATÓRIO OU PESQUISA SALVA anterior na pasta output (ex: "abrir pesquisa salva X", "mostrar relatorio Y").
 - "buscar": USE SOMENTE se o usuário pedir explicitamente para pesquisar/buscar na internet (ex: "pesquise sobre X", "busque na web Y", "procure no google Z").
 - "app": abrir um aplicativo (ex: "abre o firefox", "inicia o spotify").
 - "relogio": ver horas ou data atual (ex: "que horas sao", "qual a data").
-- "ver": ler um arquivo de pesquisa salvo (ex: "ve o arquivo X", "le a pesquisa Y").
 - "excluir": apagar arquivos gravados (ex: "deleta as pesquisas", "apaga o arquivo Z").
 - "chat": QUALQUER OUTRA PERGUNTA, dúvida, conversa, explicação, conceito ou cálculo matematico (ex: "o que e sujeito", "quanto e 10 + 10", "me explica o kernel").
 
