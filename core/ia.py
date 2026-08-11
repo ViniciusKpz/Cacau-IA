@@ -59,6 +59,7 @@ Ações válidas:
 - "ver": USE SOMENTE se o usuário pedir explicitamente para abrir um RELATÓRIO OU PESQUISA SALVA anterior na pasta output (ex: "abrir pesquisa salva X", "mostrar relatorio Y").
 - "buscar": USE SOMENTE se o usuário pedir explicitamente para pesquisar/buscar na internet (ex: "pesquise sobre X", "busque na web Y", "procure no google Z").
 - "app": abrir um aplicativo (ex: "abre o firefox", "inicia o spotify").
+- "jogar": USE quando o usuário pedir para jogar algo (ex: "vamos jogar jogo da velha", "jogar velha").
 - "relogio": ver horas ou data atual (ex: "que horas sao", "qual a data").
 - "excluir": apagar arquivos gravados (ex: "deleta as pesquisas", "apaga o arquivo Z").
 - "chat": QUALQUER OUTRA PERGUNTA, dúvida, conversa, explicação, conceito ou cálculo matematico (ex: "o que e sujeito", "quanto e 10 + 10", "me explica o kernel").

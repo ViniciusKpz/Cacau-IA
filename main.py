@@ -51,6 +51,10 @@ def main():
     elif comando in bot.ajuda.comandos_map.get("chat", ["chat"]):
         bot.iniciar_chat()
 
+    elif comando in bot.ajuda.comandos_map.get("jogar", ["jogar"]):
+        nome_jogo = " ".join(argumentos) if argumentos else None
+        bot.jogar(nome_jogo)
+
     else:
         if not bot.ajuda.sugerir_comando(comando):
             bot.saudar(" ".join(sys.argv[1:]))

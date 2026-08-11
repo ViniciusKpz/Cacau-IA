@@ -42,6 +42,10 @@ class CacauIA:
 
                 if acao == "app" and param:
                     self.abrir_aplicativo(param)
+
+                elif acao == "jogar":
+                    self.jogar(param)
+
                 elif acao == "buscar" and param:
                     self.pesquisar_e_salvar(param)
                 elif acao == "analisar" and param:
@@ -81,6 +85,90 @@ class CacauIA:
             except (KeyboardInterrupt, EOFError):
                 self.despedir()
                 break
+    def jogar(self, nome_jogo: str = None):
+        """Lista e executa jogos disponíveis procurando em múltiplos caminhos."""
+        import importlib.util
+        from pathlib import Path
+
+        raiz = Path(__file__).resolve().parent.parent
+
+        caminhos_possiveis = [
+            raiz / "Jogar",
+            raiz / "jogar",
+            raiz / "Jogos",
+            raiz / "jogos",
+            raiz / ".funcoes" / "Jogar",
+            raiz / ".funcoes" / "jogar",
+            raiz / ".funcoes" / "Jogos",
+            raiz / ".funcoes" / "jogos",
+        ]
+
+        pasta_jogos = None
+        for caminho in caminhos_possiveis:
+            if caminho.exists() and caminho.is_dir():
+                pasta_jogos = caminho
+                break
+
+        if not pasta_jogos:
+            print(f"❌ Nenhuma pasta de jogos foi encontrada em '{raiz}'. Crie a pasta 'Jogar' ou '.funcoes/jogar'.")
+            return
+
+        jogos_disponiveis = {}
+        for pasta in pasta_jogos.iterdir():
+            if pasta.is_dir():
+                # Procura script executável
+                script = pasta / "main.py"
+                if not script.exists():
+                    # Procura por qualquer .py dentro da pasta
+                    scripts_py = list(pasta.glob("*.py"))
+                    if scripts_py:
+                        script = scripts_py[0]
+
+                if script and script.exists():
+                    jogos_disponiveis[pasta.name.lower()] = script
+
+        if not jogos_disponiveis:
+            print(f"⚠️ Nenhum jogo com script .py executável foi encontrado em '{pasta_jogos}'.")
+            return
+
+        jogo_escolhido = (nome_jogo or "").lower()
+        script_alvo = None
+
+        for chave, caminho in jogos_disponiveis.items():
+            if jogo_escolhido and (jogo_escolhido in chave or chave in jogo_escolhido):
+                script_alvo = caminho
+                break
+
+        if not script_alvo:
+            print("\n🎮 \033[1;33mJogos Disponíveis:\033[0m")
+            lista_jogos = list(jogos_disponiveis.keys())
+            for idx, nome in enumerate(lista_jogos, 1):
+                print(f"  {idx}. {nome.capitalize()}")
+            
+            escolha = input("\nEscolha o número ou nome do jogo (ou 'sair'): ").strip().lower()
+            if escolha in ["sair", "cancelar", ""]:
+                return
+            
+            if escolha.isdigit() and 1 <= int(escolha) <= len(lista_jogos):
+                script_alvo = jogos_disponiveis[lista_jogos[int(escolha) - 1]]
+            else:
+                for chave, caminho in jogos_disponiveis.items():
+                    if escolha in chave:
+                        script_alvo = caminho
+                        break
+
+        if script_alvo:
+            print(f"\n🚀 [CacauIA] Iniciando '{script_alvo.parent.name}'...\n")
+            spec = importlib.util.spec_from_file_location("modulo_jogo", script_alvo)
+            modulo_jogo = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(modulo_jogo)
+
+            if hasattr(modulo_jogo, "main"):
+                modulo_jogo.main()
+            elif hasattr(modulo_jogo, "iniciar"):
+                modulo_jogo.iniciar()
+        else:
+            print("❌ Jogo não encontrado.")
 
     def saudar(self, nome: str = "Dev"):
         self.exibir_banner()
