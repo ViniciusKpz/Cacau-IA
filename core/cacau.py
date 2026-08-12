@@ -146,13 +146,14 @@ class CacauIA:
         print(" Modo Chat da CacauIA iniciado!")
         print("Digite sua mensagem em linguagem natural (ou 'sair' para encerrar).\n")
 
-        if entrada.lower() in ["!papai chegou", "!papai_chegou", "papai chegou", "status", "operador"]:
-                self.exibir_status()
-
         while True:
             try:
                 entrada = input("\033[1;36mVocê > \033[0m").strip()
                 if not entrada:
+                    continue
+
+                if entrada.lower() in ["!papai chegou", "!papai_chegou", "papai chegou", "status", "operador"]:
+                    self.exibir_status()
                     continue
 
                 if entrada.lower() in ["sair", "exit", "quit", "tchau"]:
@@ -163,6 +164,14 @@ class CacauIA:
                 acao = intencao.get("acao", "chat")
                 param = intencao.get("parametro", "")
 
+                if acao == "chat":
+                    palavras = entrada.split()
+                    for p in palavras:
+                        if "/" in p or p.startswith("~") or p.startswith("."):
+                            acao = "analisar"
+                            param = p
+                            break
+
                 if acao == "app" and param:
                     self.abrir_aplicativo(param)
 
@@ -171,10 +180,14 @@ class CacauIA:
 
                 elif acao == "buscar" and param:
                     self.pesquisar_e_salvar(param)
+
                 elif acao == "analisar" and param:
-                    print(f" [CacauIA] Inspecionando '{param}'...")
-                    import importlib.util
                     from pathlib import Path
+                    caminho_obj = Path(param).expanduser()
+                    param_expandido = str(caminho_obj)
+
+                    print(f" [CacauIA] Inspecionando '{param_expandido}'...")
+                    import importlib.util
 
                     raiz = Path(__file__).resolve().parent.parent
                     caminho_script = raiz / ".funcoes" / "navegar" / "analise.py"
@@ -185,22 +198,26 @@ class CacauIA:
 
                     analisar_caminho = modulo_navegar.analisar_caminho
 
-                    dados_extraidos = analisar_caminho(param)
+                    dados_extraidos = analisar_caminho(param_expandido)
 
                     prompt_contexto = (
-                        f"O usuário pediu para analisar o caminho '{param}'. "
+                        f"O usuário pediu para analisar o caminho '{param_expandido}'. "
                         f"Abaixo estão os dados coletados do sistema:\n\n{dados_extraidos}\n\n"
                         f"Faça um resumo explicativo e amigável sobre o que é este projeto ou arquivo."
                     )
 
                     resposta = self.ia.conversar(prompt_contexto)
                     print(f"\n \033[1;33mCacauIA >\033[0m {resposta}\n")
+
                 elif acao == "relogio":
                     self.mostrar_relogio()
+
                 elif acao == "ver" and param:
                     self.abrir_arquivo(param)
+
                 elif acao == "excluir" and param:
                     self.excluir_pesquisa(param)
+
                 else:
                     resposta = self.ia.conversar(entrada)
                     print(f"\n \033[1;33mCacauIA >\033[0m {resposta}\n")
@@ -208,6 +225,7 @@ class CacauIA:
             except (KeyboardInterrupt, EOFError):
                 self.despedir()
                 break
+
     def jogar(self, nome_jogo: str = None):
         """Lista e executa jogos disponíveis procurando em múltiplos caminhos."""
         import importlib.util
