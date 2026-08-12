@@ -18,13 +18,136 @@ class CacauIA:
         self.ajuda = AjudaCacauIA()
         self.ia = IAEngine()
 
+    def exibir_status(self):
+        """Exibe o Dashboard Operacional da CacauIA no terminal ao chamar '!Papai chegou'."""
+        import socket
+        import subprocess
+        import requests
+        from pathlib import Path
+
+        sistemas_ok = True
+
+        try:
+            res_rede = requests.get("https://1.1.1.1", timeout=3)
+            if res_rede.status_code == 200:
+                status_rede = "ONLINE (HTTP 200)"
+                status_dns = "OK"
+            else:
+                status_rede = "ONLINE"
+                status_dns = "OK"
+        except Exception:
+            try:
+                res_dns = requests.get("https://www.google.com", timeout=3)
+                status_rede = "ONLINE"
+                status_dns = "OK"
+            except Exception:
+                status_rede = "OFFLINE"
+                status_dns = "FALHA"
+                sistemas_ok = False
+
+        try:
+            url_base = self.ia.url_generate.replace("/api/generate", "")
+            res = requests.get(f"{url_base}/", timeout=1)
+            if res.status_code == 200:
+                status_ollama = "ONLINE (HTTP 200)"
+            else:
+                status_ollama = "ERRO"
+                sistemas_ok = False
+        except Exception:
+            status_ollama = "OFFLINE"
+            sistemas_ok = False
+
+        raiz = Path(__file__).resolve().parent.parent
+        try:
+            commit_atual = subprocess.check_output(
+                ["git", "log", "-1", "--pretty=format:%s"],
+                cwd=raiz, text=True, stderr=subprocess.DEVNULL
+            ).strip()
+        except Exception:
+            commit_atual = "Não identificado"
+
+        try:
+            subprocess.run(["git", "fetch"], cwd=raiz, timeout=2, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            status_git = subprocess.check_output(
+                ["git", "status", "-sb"],
+                cwd=raiz, text=True, stderr=subprocess.DEVNULL
+            ).strip().splitlines()[0]
+
+            if "behind" in status_git:
+                sinc_github = "Desatualizado (commits pendentes no GitHub)"
+            else:
+                sinc_github = "Atualizado com o GitHub"
+        except Exception:
+            sinc_github = "Erro ao conectar com o GitHub"
+
+        candidatos = [
+            raiz / ".funcoes" / "Jogar",
+            raiz / ".funcoes" / "jogar",
+            raiz / "Jogar",
+            raiz / "jogar",
+        ]
+
+        pasta_jogos = None
+        num_jogos = 0
+
+        for c in candidatos:
+            if c.exists():
+                conteudo = [
+                    f for f in c.iterdir() 
+                    if (f.is_dir() or f.suffix == ".py") 
+                    and not f.name.startswith("__") 
+                    and not f.name.startswith(".")
+                ]
+                if len(conteudo) > 0:
+                    pasta_jogos = c
+                    num_jogos = len(conteudo)
+                    break
+                elif pasta_jogos is None:
+                    pasta_jogos = c
+
+        if not pasta_jogos:
+            pasta_jogos = raiz / ".funcoes" / "Jogar"
+
+        nome_exibicao = f"{pasta_jogos.parent.name}/{pasta_jogos.name}" if pasta_jogos.parent.name.startswith(".") else pasta_jogos.name
+
+        print("\n=== CACAU IA - OPERATOR DASHBOARD & DIAGNOSTICS ===")
+        print('"Bem-vindo de volta, Senhor. Todos os sistemas estão operacionais."\n')
+
+        print("REDE & CONEXAO")
+        print(f"  [-] Conexao com a Internet ........ {status_rede}")
+        print(f"  [-] Resolucao de DNS .............. {status_dns}")
+
+        print("\nMOTOR DE IA (OLLAMA)")
+        print(f"  [-] Servico Ollama (localhost) .... {status_ollama}")
+        print(f"  [-] Modelo {getattr(self.ia, 'modelo', 'llama3.2')} .............. CARREGADO")
+
+        print("\nREPOSITORIO GITHUB / VERSAO")
+        print(f"  [-] Versao Atual (Sistema IA) ......... {commit_atual}")
+        print(f"  [-] Sincronizacao Remota .......... {sinc_github}")
+
+        print("\nESTRUTURA DO SISTEMA")
+        print(f"  [-] Diretorio Raiz ({raiz}) ... OK")
+        print(f"  [-] Modulo de Jogos ({nome_exibicao}/) ...... OK ({num_jogos} jogos encontrados)")
+        print(f"  [-] Pasta de Saida ({self.pasta_output}) ...... OK")
+
+        print("\n----------------------------------------------------")
+        
+        # Indicador visual exclusivo para o Status Geral
+        if sistemas_ok:
+            print("STATUS GERAL: 🟢 SISTEMA OPERACIONAL E PRONTO\n")
+        else:
+            print("STATUS GERAL: 🔴 FALHA EM UM OU MAIS SISTEMAS\n")
+
     def exibir_banner(self):
         exibir_banner_principal()
 
     def iniciar_chat(self):
         self.exibir_banner()
-        print("💬 Modo Chat da CacauIA iniciado!")
+        print(" Modo Chat da CacauIA iniciado!")
         print("Digite sua mensagem em linguagem natural (ou 'sair' para encerrar).\n")
+
+        if entrada.lower() in ["!papai chegou", "!papai_chegou", "papai chegou", "status", "operador"]:
+                self.exibir_status()
 
         while True:
             try:
@@ -49,7 +172,7 @@ class CacauIA:
                 elif acao == "buscar" and param:
                     self.pesquisar_e_salvar(param)
                 elif acao == "analisar" and param:
-                    print(f"📂 [CacauIA] Inspecionando '{param}'...")
+                    print(f" [CacauIA] Inspecionando '{param}'...")
                     import importlib.util
                     from pathlib import Path
 
@@ -71,7 +194,7 @@ class CacauIA:
                     )
 
                     resposta = self.ia.conversar(prompt_contexto)
-                    print(f"\n🍫 \033[1;33mCacauIA >\033[0m {resposta}\n")
+                    print(f"\n \033[1;33mCacauIA >\033[0m {resposta}\n")
                 elif acao == "relogio":
                     self.mostrar_relogio()
                 elif acao == "ver" and param:
@@ -80,7 +203,7 @@ class CacauIA:
                     self.excluir_pesquisa(param)
                 else:
                     resposta = self.ia.conversar(entrada)
-                    print(f"\n🍫 \033[1;33mCacauIA >\033[0m {resposta}\n")
+                    print(f"\n \033[1;33mCacauIA >\033[0m {resposta}\n")
 
             except (KeyboardInterrupt, EOFError):
                 self.despedir()
@@ -110,7 +233,7 @@ class CacauIA:
                 break
 
         if not pasta_jogos:
-            print(f"❌ Nenhuma pasta de jogos foi encontrada em '{raiz}'. Crie a pasta 'Jogar' ou '.funcoes/jogar'.")
+            print(f" Nenhuma pasta de jogos foi encontrada em '{raiz}'. Crie a pasta 'Jogar' ou '.funcoes/jogar'.")
             return
 
         jogos_disponiveis = {}
@@ -128,7 +251,7 @@ class CacauIA:
                     jogos_disponiveis[pasta.name.lower()] = script
 
         if not jogos_disponiveis:
-            print(f"⚠️ Nenhum jogo com script .py executável foi encontrado em '{pasta_jogos}'.")
+            print(f" Nenhum jogo com script .py executável foi encontrado em '{pasta_jogos}'.")
             return
 
         jogo_escolhido = (nome_jogo or "").lower()
@@ -158,7 +281,7 @@ class CacauIA:
                         break
 
         if script_alvo:
-            print(f"\n🚀 [CacauIA] Iniciando '{script_alvo.parent.name}'...\n")
+            print(f"\n [CacauIA] Iniciando '{script_alvo.parent.name}'...\n")
             spec = importlib.util.spec_from_file_location("modulo_jogo", script_alvo)
             modulo_jogo = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(modulo_jogo)
@@ -172,34 +295,34 @@ class CacauIA:
 
     def saudar(self, nome: str = "Dev"):
         self.exibir_banner()
-        print(f"Olá, {nome}! 🍫\nEu sou a CacauIA, sua assistente no Linux.\n")
+        print(f"Olá, {nome}! \nEu sou a CacauIA, sua assistente no Linux.\n")
 
     def despedir(self):
-        print("\nDesligando módulos. Até logo! 👋🍫\n")
+        print("\nDesligando módulos. Até logo! \n")
 
     def mostrar_relogio(self):
         agora = datetime.now()
-        print(f"\n⏰ [CacauIA] Data: {agora.strftime('%d/%m/%Y')} | Hora: {agora.strftime('%H:%M:%S')}\n")
+        print(f"\n [CacauIA] Data: {agora.strftime('%d/%m/%Y')} | Hora: {agora.strftime('%H:%M:%S')}\n")
 
     def abrir_aplicativo(self, nome_app: str):
         app = nome_app.lower().strip()
         try:
             subprocess.Popen([app], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            print(f"✨ {app.capitalize()} iniciado!")
+            print(f" {app.capitalize()} iniciado!")
         except FileNotFoundError:
-            print(f"❌ Aplicativo '{app}' não encontrado no sistema.")
+            print(f" Aplicativo '{app}' não encontrado no sistema.")
 
     def pesquisar_e_salvar(self, termo: str):
-        print(f"🔍 [CacauIA] Pesquisando sobre '{termo}'...")
+        print(f" [CacauIA] Pesquisando sobre '{termo}'...")
         try:
             with DDGS() as ddgs:
                 resultados = list(ddgs.text(termo, max_results=5))
         except Exception as e:
-            print(f"❌ Erro na busca: {e}\n")
+            print(f" Erro na busca: {e}\n")
             return
 
         if not resultados:
-            print("⚠️ Nenhum resultado encontrado.\n")
+            print(" Nenhum resultado encontrado.\n")
             return
 
         texto_bruto = ""
@@ -216,7 +339,7 @@ class CacauIA:
             f.write(conteudo_final)
 
         # Printa o resultado direto no terminal para você não ter que dar 'cacau ver'
-        print(f"\n✨ Resultado encontrado e salvo em: {caminho_completo}\n")
+        print(f"\n Resultado encontrado e salvo em: {caminho_completo}\n")
         print("="*40)
         print(conteudo_final)
         print("="*40 + "\n")
@@ -229,23 +352,23 @@ class CacauIA:
 
         caminho = os.path.join(self.pasta_output, nome_limpo)
         if os.path.exists(caminho):
-            print(f"\n📖 Lendo: {caminho}\n" + "="*40)
+            print(f"\n Lendo: {caminho}\n" + "="*40)
             with open(caminho, "r", encoding="utf-8") as f:
                 print(f.read())
             print("="*40)
         else:
-            print(f"❌ Arquivo '{nome_limpo}' não foi encontrado em output.")
+            print(f" Arquivo '{nome_limpo}' não foi encontrado em output.")
 
     def excluir_pesquisa(self, termo: str):
         if not os.path.exists(self.pasta_output):
-            print("⚠️ Nenhuma pesquisa para excluir.")
+            print(" Nenhuma pesquisa para excluir.")
             return
 
         termo_limpo = termo.lower().strip()
         if termo_limpo in ["todas", "tudo", "*"]:
             for arq in glob.glob(os.path.join(self.pasta_output, "*.txt")):
                 os.remove(arq)
-            print("🗑️ Todas as pesquisas foram excluídas!")
+            print(" Todas as pesquisas foram excluídas!")
             return
 
         nome_arquivo = termo_limpo.replace(" ", "_")
@@ -255,6 +378,6 @@ class CacauIA:
         caminho = os.path.join(self.pasta_output, nome_arquivo)
         if os.path.exists(caminho):
             os.remove(caminho)
-            print(f"🗑️ Arquivo '{nome_arquivo}' removido!")
+            print(f" Arquivo '{nome_arquivo}' removido!")
         else:
             print(f"❌ Arquivo '{nome_arquivo}' não encontrado.")

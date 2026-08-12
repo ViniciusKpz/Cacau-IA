@@ -8,10 +8,16 @@ def main():
         bot.ajuda.exibir_ajuda()
         return
 
+    comando_completo = " ".join(sys.argv[1:]).lower().strip()
     comando = sys.argv[1].lower()
     argumentos = sys.argv[2:]
 
-    if comando in bot.ajuda.comandos_map["ajuda"]:
+    comandos_operador = ["!papai chegou", "papai chegou", "!papai_chegou", "papai_chegou", "status", "operador"]
+
+    if comando_completo in comandos_operador:
+        bot.exibir_status()
+
+    elif comando in bot.ajuda.comandos_map["ajuda"]:
         bot.ajuda.exibir_ajuda()
 
     elif comando in bot.ajuda.comandos_map["oi"]:
@@ -28,26 +34,26 @@ def main():
         if argumentos:
             bot.abrir_aplicativo(" ".join(argumentos))
         else:
-            print("⚠️ Uso: python main.py app <nome_do_app>")
+            print(" Uso: python main.py app <nome_do_app>")
 
     elif comando in bot.ajuda.comandos_map["buscar"]:
         if argumentos:
             bot.pesquisar_e_salvar(" ".join(argumentos))
         else:
-            print("⚠️ Uso: python main.py buscar <termo>")
+            print(" Uso: python main.py buscar <termo>")
 
     elif comando in bot.ajuda.comandos_map["ver"]:
         if argumentos:
             bot.abrir_arquivo(" ".join(argumentos))
         else:
-            print("⚠️ Uso: python main.py ver <nome_do_arquivo>")
+            print(" Uso: python main.py ver <nome_do_arquivo>")
 
     elif comando in bot.ajuda.comandos_map["excluir"]:
         if argumentos:
             bot.excluir_pesquisa(" ".join(argumentos))
         else:
-            print("⚠️ Uso: python main.py excluir <termo_ou_todas>")
-    
+            print(" Uso: python main.py excluir <termo_ou_todas>")
+
     elif comando in bot.ajuda.comandos_map.get("chat", ["chat"]):
         bot.iniciar_chat()
 

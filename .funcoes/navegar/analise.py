@@ -8,7 +8,7 @@ def analisar_caminho(caminho_relativo: str) -> str:
     caminho = os.path.expanduser(caminho_relativo.strip())
 
     if not os.path.exists(caminho):
-        return f"❌ O caminho '{caminho_relativo}' não existe no sistema."
+        return f" O caminho '{caminho_relativo}' não existe no sistema."
 
     # Se for um DIRETÓRIO (pasta)
     if os.path.isdir(caminho):
@@ -27,11 +27,11 @@ def analisar_caminho(caminho_relativo: str) -> str:
                 continue  # Pula pastas ocultas profundas
 
             indent = '  ' * nivel
-            estrutura.append(f"{indent}📁 {os.path.basename(root)}/")
+            estrutura.append(f"{indent} {os.path.basename(root)}/")
             
             for f in files:
                 if not f.startswith('.'):
-                    estrutura.append(f"{indent}  📄 {f}")
+                    estrutura.append(f"{indent}   {f}")
                     total_arquivos += 1
             total_pastas += len(dirs)
 
@@ -56,6 +56,6 @@ def analisar_caminho(caminho_relativo: str) -> str:
                 f"{conteudo}\n"
             )
         except Exception as e:
-            return f"❌ Não foi possível ler o arquivo '{caminho_relativo}': {e}"
+            return f" Não foi possível ler o arquivo '{caminho_relativo}': {e}"
 
     return "⚠️ Tipo de arquivo não suportado."

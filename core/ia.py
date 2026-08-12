@@ -23,7 +23,7 @@ class IAEngine:
 
     def conversar(self, mensagem_usuario: str) -> str:
         if not self.disponivel:
-            return "❌ O serviço Ollama não está rodando. Inicie com 'ollama serve' no terminal."
+            return " O serviço Ollama não está rodando. Inicie com 'ollama serve' no terminal."
 
         self.historico.append({"role": "user", "content": mensagem_usuario})
 
@@ -42,9 +42,9 @@ class IAEngine:
                 self.historico.append({"role": "assistant", "content": resposta})
                 return resposta
         except Exception as e:
-            return f"❌ Erro ao conectar com o Ollama: {e}"
+            return f" Erro ao conectar com o Ollama: {e}"
 
-        return "⚠️ Não foi possível obter resposta da IA."
+        return " Não foi possível obter resposta da IA."
 
     def interpretar_intencao(self, texto: str) -> dict:
         """Usa a IA para classificar o texto do usuário em um comando estruturado."""
