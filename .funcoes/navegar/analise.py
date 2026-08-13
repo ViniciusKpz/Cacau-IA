@@ -58,4 +58,4 @@ def analisar_caminho(caminho_relativo: str) -> str:
         except Exception as e:
             return f" Não foi possível ler o arquivo '{caminho_relativo}': {e}"
 
-    return "⚠️ Tipo de arquivo não suportado."
+    return " Tipo de arquivo não suportado."

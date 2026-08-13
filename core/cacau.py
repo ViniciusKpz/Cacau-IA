@@ -11,18 +11,39 @@ from core.ajuda import AjudaCacauIA
 from core.ia import IAEngine
 from ASCII.banner import exibir_banner_principal
 
+import threading
+import json
+from pathlib import Path
+
+try:
+    from .funcoes.sistema.diagnostico import executar_varredura_completa
+except ImportError:
+    import importlib.util
+    raiz_temp = Path(__file__).resolve().parent.parent
+    path_diag = raiz_temp / ".funcoes" / "sistema" / "diagnostico.py"
+    if path_diag.exists():
+        spec = importlib.util.spec_from_file_location("diagnostico", path_diag)
+        mod_diag = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod_diag)
+        executar_varredura_completa = mod_diag.executar_varredura_completa
+    else:
+        executar_varredura_completa = None
+
 class CacauIA:
     def __init__(self):
         diretorio_core = os.path.dirname(os.path.abspath(__file__))
         self.pasta_output = os.path.abspath(os.path.join(diretorio_core, "..", "output"))
         self.ajuda = AjudaCacauIA()
         self.ia = IAEngine()
+        if executar_varredura_completa:
+            threading.Thread(target=executar_varredura_completa, daemon=True).start()
 
     def exibir_status(self):
         """Exibe o Dashboard Operacional da CacauIA no terminal ao chamar '!Papai chegou'."""
         import socket
         import subprocess
         import requests
+        import json
         from pathlib import Path
 
         sistemas_ok = True
@@ -129,6 +150,36 @@ class CacauIA:
         print(f"  [-] Diretorio Raiz ({raiz}) ... OK")
         print(f"  [-] Modulo de Jogos ({nome_exibicao}/) ...... OK ({num_jogos} jogos encontrados)")
         print(f"  [-] Pasta de Saida ({self.pasta_output}) ...... OK")
+
+        # --- DIAGNÓSTICO DE INTEGRIDADE (BACKGROUND) ---
+        cache_health = raiz / ".funcoes" / "cache" / "health.json"
+        print("\nDIAGNÓSTICO DE INTEGRIDADE (BACKGROUND)")
+        if cache_health.exists():
+            try:
+                with open(cache_health, "r", encoding="utf-8") as f:
+                    health = json.load(f)
+                
+                detalhes = health.get("detalhes", {})
+                
+                st_sin = "OK" if detalhes.get("sintaxe", {}).get("ok") else "FALHA"
+                print(f"  [-] Checagem de Sintaxe ........ {st_sin}")
+                
+                st_ol = "OK" if detalhes.get("ollama", {}).get("ok") else "FALHA"
+                print(f"  [-] Motor de IA (Ollama) ....... {st_ol}")
+
+                st_est = "OK" if detalhes.get("estrutura", {}).get("ok") else "FALHA"
+                print(f"  [-] Arquivos do Core .......... {st_est}")
+
+                erros_sin = detalhes.get("sintaxe", {}).get("erros", [])
+                if erros_sin:
+                    sistemas_ok = False
+                    for err in erros_sin:
+                        print(f"      └─>  {err}")
+                    
+            except Exception:
+                print("  [-] Status de Integridade ...... INDISPONÍVEL (Erro de Leitura)")
+        else:
+            print("  [-] Status de Integridade ...... ESCANEANDO EM SEGUNDO PLANO...")
 
         print("\n----------------------------------------------------")
         

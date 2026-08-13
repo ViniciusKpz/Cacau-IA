@@ -1,0 +1,17 @@
+{
+  "status_geral": "OK",
+  "detalhes": {
+    "sintaxe": {
+      "ok": true,
+      "erros": []
+    },
+    "ollama": {
+      "ok": true,
+      "mensagem": "Ollama ativo (HTTP 200)"
+    },
+    "estrutura": {
+      "ok": true,
+      "faltantes": []
+    }
+  }
+}
