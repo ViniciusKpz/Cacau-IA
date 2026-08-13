@@ -161,20 +161,36 @@ class CacauIA:
                 
                 detalhes = health.get("detalhes", {})
                 
-                st_sin = "OK" if detalhes.get("sintaxe", {}).get("ok") else "FALHA"
+                # 1. Sintaxe e Execução de Módulos
+                sin_info = detalhes.get("sintaxe", {})
+                sintaxe_ok = sin_info.get("ok", True)
+                st_sin = "OK" if sintaxe_ok else "\033[31mFALHA\033[0m"
                 print(f"  [-] Checagem de Sintaxe ........ {st_sin}")
-                
-                st_ol = "OK" if detalhes.get("ollama", {}).get("ok") else "FALHA"
+
+                # 2. Teste do Ollama em background
+                ol_info = detalhes.get("ollama", {})
+                ollama_ok = ol_info.get("ok", True)
+                st_ol = "OK" if ollama_ok else "\033[31mFALHA\033[0m"
                 print(f"  [-] Motor de IA (Ollama) ....... {st_ol}")
 
-                st_est = "OK" if detalhes.get("estrutura", {}).get("ok") else "FALHA"
+                # 3. Estrutura Vital
+                est_info = detalhes.get("estrutura", {})
+                estrutura_ok = est_info.get("ok", True)
+                st_est = "OK" if estrutura_ok else "\033[31mFALHA\033[0m"
                 print(f"  [-] Arquivos do Core .......... {st_est}")
 
-                erros_sin = detalhes.get("sintaxe", {}).get("erros", [])
-                if erros_sin:
+                # Se qualquer um falhar no diagnóstico de fundo, altera o status geral
+                if not (sintaxe_ok and ollama_ok and estrutura_ok):
                     sistemas_ok = False
-                    for err in erros_sin:
-                        print(f"      └─>  {err}")
+
+                # Imprime os detalhes das falhas encontradas
+                erros_sin = sin_info.get("erros", [])
+                for err in erros_sin:
+                    print(f"      └─> \033[31m[ERRO]\033[0m {err}")
+
+                faltantes = est_info.get("faltantes", [])
+                for item in faltantes:
+                    print(f"      └─> \033[31m[FALTANDO]\033[0m Arquivo vital: {item}")
                     
             except Exception:
                 print("  [-] Status de Integridade ...... INDISPONÍVEL (Erro de Leitura)")
@@ -183,7 +199,7 @@ class CacauIA:
 
         print("\n----------------------------------------------------")
         
-        # Indicador visual exclusivo para o Status Geral
+        # Indicador visual do Status Geral
         if sistemas_ok:
             print("STATUS GERAL: 🟢 SISTEMA OPERACIONAL E PRONTO\n")
         else:
