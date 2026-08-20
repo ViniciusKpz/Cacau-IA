@@ -1,6 +1,7 @@
 import threading
 import customtkinter as ctk
 import os
+import random
 import pygame
 
 ctk.set_appearance_mode("dark")
@@ -24,26 +25,44 @@ class CacauApp(ctk.CTk):
         
         self._criar_interface()
 
-        # Atualização periódica do status em background
-        self.after(1000, self.atualizar_metricas_sistema)
+        # Mapeia a pasta de áudios
         caminho_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        caminho_som = os.path.join(caminho_base, ".funcoes", "efeitos_sonoros", "mp3cutbib.mp3")
+        pasta_sons = os.path.join(caminho_base, ".funcoes", "efeitos_sonoros")
         
-        # Toca o efeito sonoro de inicialização
-        self._tocar_som_inicial(caminho_som)
+        # Toca um efeito sonoro aleatório da pasta
+        self._tocar_som_inicial(pasta_sons)
 
         # Atualização periódica do status em background
         self.after(1000, self.atualizar_metricas_sistema)
 
-    def _tocar_som_inicial(self, caminho_mp3):
-        """Inicializa o mixer do pygame e reproduz o som."""
+    def _tocar_som_inicial(self, pasta_sons):
+        """Sorteia um áudio válido da pasta e reproduz via thread secundária."""
         def tocar():
             try:
+                extensoes = ('.mp3', '.wav', '.ogg')
+                if not os.path.exists(pasta_sons):
+                    return
+
+                sons = [os.path.join(pasta_sons, f) for f in os.listdir(pasta_sons) if f.lower().endswith(extensoes)]
+                
+                if not sons:
+                    print("[AVISO] Nenhum arquivo de áudio encontrado na pasta de efeitos sonoros.")
+                    return
+
+                # Embaralha a lista para tentar outro arquivo se o primeiro estiver corrompido
+                random.shuffle(sons)
                 pygame.mixer.init()
-                pygame.mixer.music.load(caminho_mp3)
-                pygame.mixer.music.play()
+
+                for som in sons:
+                    try:
+                        pygame.mixer.music.load(som)
+                        pygame.mixer.music.play()
+                        break  # Se carregou e tocou sem erro, sai do loop
+                    except Exception as e:
+                        print(f"[AVISO] Ignorando arquivo incompatível/corrompido ({os.path.basename(som)}): {e}")
+
             except Exception as e:
-                print(f"[AVISO] Não foi possível reproduzir o som inicial: {e}")
+                print(f"[AVISO] Erro no sistema de áudio: {e}")
 
         threading.Thread(target=tocar, daemon=True).start()
 
