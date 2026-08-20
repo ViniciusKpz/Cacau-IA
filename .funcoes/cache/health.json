@@ -1,0 +1,17 @@
+{
+  "status_geral": "OK",
+  "detalhes": {
+    "sintaxe": {
+      "ok": true,
+      "erros": []
+    },
+    "ollama": {
+      "ok": true,
+      "mensagem": "IA OK"
+    },
+    "estrutura": {
+      "ok": true,
+      "faltantes": []
+    }
+  }
+}

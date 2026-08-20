@@ -1,11 +1,13 @@
 import sys
 from core.cacau import CacauIA
+from interface.app import CacauApp
 
 def main():
     bot = CacauIA()
-
+    
     if len(sys.argv) < 2:
-        bot.ajuda.exibir_ajuda()
+        app = CacauApp(bot_instance=bot)
+        app.run()
         return
 
     comando_completo = " ".join(sys.argv[1:]).lower().strip()

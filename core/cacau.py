@@ -38,8 +38,78 @@ class CacauIA:
         if executar_varredura_completa:
             threading.Thread(target=executar_varredura_completa, daemon=True).start()
 
+    def responder_chat(self, mensagem):
+        """Processa a mensagem utilizando exatamente a mesma lógica e rotas do terminal CLI."""
+        entrada = mensagem.strip()
+
+        if not entrada:
+            return ""
+
+        if entrada.lower() in ["cacau chat", "chat"]:
+            return "Modo chat ativo! Como posso te ajudar?"
+
+        try:
+            intencao = self.ia.interpretar_intencao(entrada)
+            acao = intencao.get("acao", "chat")
+            param = intencao.get("parametro", "")
+
+            if acao == "chat":
+                palavras = entrada.split()
+                for p in palavras:
+                    if "/" in p or p.startswith("~") or p.startswith("."):
+                        acao = "analisar"
+                        param = p
+                        break
+
+            if acao == "analisar" and param:
+                from pathlib import Path
+                import importlib.util
+
+                caminho_obj = Path(param).expanduser()
+                param_expandido = str(caminho_obj)
+
+                raiz = Path(__file__).resolve().parent.parent
+                caminho_script = raiz / ".funcoes" / "navegar" / "analise.py"
+
+                if caminho_script.exists():
+                    spec = importlib.util.spec_from_file_location("analise_modulo", caminho_script)
+                    modulo_navegar = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(modulo_navegar)
+
+                    analisar_caminho = modulo_navegar.analisar_caminho
+                    dados_extraidos = analisar_caminho(param_expandido)
+
+                    prompt_contexto = (
+                        f"O usuário pediu para analisar o caminho '{param_expandido}'. "
+                        f"Abaixo estão os dados coletados do sistema:\n\n{dados_extraidos}\n\n"
+                        f"Faça um resumo explicativo e amigável sobre o que é este projeto ou arquivo."
+                    )
+
+                    return self.ia.conversar(prompt_contexto)
+                else:
+                    return f"Módulo de análise não encontrado em {caminho_script}"
+
+            elif acao == "app" and param:
+                self.abrir_aplicativo(param)
+                return f"Iniciando aplicativo: {param}..."
+
+            elif acao == "buscar" and param:
+                self.pesquisar_e_salvar(param)
+                return f"Busca realizada para: {param}"
+
+            elif acao == "relogio":
+                from datetime import datetime
+                agora = datetime.now().strftime("%H:%M:%S - %d/%m/%Y")
+                return f"Data e Hora atual: {agora}"
+
+            else:
+                return self.ia.conversar(entrada)
+
+        except Exception as e:
+            return f"Erro ao processar requisição: {e}"
+
     def exibir_status(self):
-        """Exibe o Dashboard Operacional da CacauIA no terminal ao chamar '!Papai chegou'."""
+        """Dashboard Operacional da CacauIA (usado pelo terminal e pelo Tkinter)."""
         import socket
         import subprocess
         import requests
@@ -48,36 +118,30 @@ class CacauIA:
 
         sistemas_ok = True
 
+        # Teste REDE
         try:
             res_rede = requests.get("https://1.1.1.1", timeout=3)
-            if res_rede.status_code == 200:
-                status_rede = "ONLINE (HTTP 200)"
-                status_dns = "OK"
-            else:
-                status_rede = "ONLINE"
-                status_dns = "OK"
+            status_rede = "ONLINE (HTTP 200)" if res_rede.status_code == 200 else "ONLINE"
+            status_dns = "OK"
         except Exception:
             try:
-                res_dns = requests.get("https://www.google.com", timeout=3)
-                status_rede = "ONLINE"
-                status_dns = "OK"
+                requests.get("https://www.google.com", timeout=3)
+                status_rede, status_dns = "ONLINE", "OK"
             except Exception:
-                status_rede = "OFFLINE"
-                status_dns = "FALHA"
+                status_rede, status_dns = "OFFLINE", "FALHA"
                 sistemas_ok = False
 
+        # Teste OLLAMA
         try:
             url_base = self.ia.url_generate.replace("/api/generate", "")
             res = requests.get(f"{url_base}/", timeout=1)
-            if res.status_code == 200:
-                status_ollama = "ONLINE (HTTP 200)"
-            else:
-                status_ollama = "ERRO"
-                sistemas_ok = False
+            status_ollama = "ONLINE (HTTP 200)" if res.status_code == 200 else "ERRO"
+            if res.status_code != 200: sistemas_ok = False
         except Exception:
             status_ollama = "OFFLINE"
             sistemas_ok = False
 
+        # Teste GIT
         raiz = Path(__file__).resolve().parent.parent
         try:
             commit_atual = subprocess.check_output(
@@ -93,117 +157,77 @@ class CacauIA:
                 ["git", "status", "-sb"],
                 cwd=raiz, text=True, stderr=subprocess.DEVNULL
             ).strip().splitlines()[0]
-
-            if "behind" in status_git:
-                sinc_github = "Desatualizado (commits pendentes no GitHub)"
-            else:
-                sinc_github = "Atualizado com o GitHub"
+            sinc_github = "Desatualizado (commits pendentes)" if "behind" in status_git else "Atualizado com GitHub"
         except Exception:
-            sinc_github = "Erro ao conectar com o GitHub"
+            sinc_github = "Erro ao conectar com GitHub"
 
+        # Teste ESTRUTURA E JOGOS
         candidatos = [
             raiz / ".funcoes" / "Jogar",
             raiz / ".funcoes" / "jogar",
             raiz / "Jogar",
             raiz / "jogar",
         ]
-
-        pasta_jogos = None
-        num_jogos = 0
-
+        pasta_jogos, num_jogos = None, 0
         for c in candidatos:
             if c.exists():
-                conteudo = [
-                    f for f in c.iterdir() 
-                    if (f.is_dir() or f.suffix == ".py") 
-                    and not f.name.startswith("__") 
-                    and not f.name.startswith(".")
-                ]
+                conteudo = [f for f in c.iterdir() if (f.is_dir() or f.suffix == ".py") and not f.name.startswith("__") and not f.name.startswith(".")]
                 if len(conteudo) > 0:
-                    pasta_jogos = c
-                    num_jogos = len(conteudo)
+                    pasta_jogos, num_jogos = c, len(conteudo)
                     break
                 elif pasta_jogos is None:
                     pasta_jogos = c
 
-        if not pasta_jogos:
-            pasta_jogos = raiz / ".funcoes" / "Jogar"
-
+        if not pasta_jogos: pasta_jogos = raiz / ".funcoes" / "Jogar"
         nome_exibicao = f"{pasta_jogos.parent.name}/{pasta_jogos.name}" if pasta_jogos.parent.name.startswith(".") else pasta_jogos.name
 
-        print("\n=== CACAU IA - OPERATOR DASHBOARD & DIAGNOSTICS ===")
-        print('"Bem-vindo de volta, Senhor. Todos os sistemas estão operacionais."\n')
+        # Montagem das linhas
+        out = []
+        out.append("=== OPERATOR DASHBOARD ===")
+        out.append('"Bem-vindo de volta, Senhor."\n')
+        out.append("REDE & CONEXÃO")
+        out.append(f"  [-] Internet ........ {status_rede}")
+        out.append(f"  [-] DNS ............. {status_dns}")
+        out.append("\nMOTOR DE IA")
+        out.append(f"  [-] Ollama .......... {status_ollama}")
+        out.append(f"  [-] Modelo .......... {getattr(self.ia, 'modelo', 'llama3.2')}")
+        out.append("\nREPOSITÓRIO / VERSÃO")
+        out.append(f"  [-] Commit .......... {commit_atual}")
+        out.append(f"  [-] Sincronia ....... {sinc_github}")
+        out.append("\nESTRUTURA")
+        out.append(f"  [-] Jogos ........... {nome_exibicao} ({num_jogos} encontrados)")
 
-        print("REDE & CONEXAO")
-        print(f"  [-] Conexao com a Internet ........ {status_rede}")
-        print(f"  [-] Resolucao de DNS .............. {status_dns}")
-
-        print("\nMOTOR DE IA (OLLAMA)")
-        print(f"  [-] Servico Ollama (localhost) .... {status_ollama}")
-        print(f"  [-] Modelo {getattr(self.ia, 'modelo', 'llama3.2')} .............. CARREGADO")
-
-        print("\nREPOSITORIO GITHUB / VERSAO")
-        print(f"  [-] Versao Atual (Sistema IA) ......... {commit_atual}")
-        print(f"  [-] Sincronizacao Remota .......... {sinc_github}")
-
-        print("\nESTRUTURA DO SISTEMA")
-        print(f"  [-] Diretorio Raiz ({raiz}) ... OK")
-        print(f"  [-] Modulo de Jogos ({nome_exibicao}/) ...... OK ({num_jogos} jogos encontrados)")
-        print(f"  [-] Pasta de Saida ({self.pasta_output}) ...... OK")
-
-        # --- DIAGNÓSTICO DE INTEGRIDADE (BACKGROUND) ---
+        # DIAGNÓSTICO
         cache_health = raiz / ".funcoes" / "cache" / "health.json"
-        print("\nDIAGNÓSTICO DE INTEGRIDADE (BACKGROUND)")
+        out.append("\nINTEGRIDADE")
         if cache_health.exists():
             try:
                 with open(cache_health, "r", encoding="utf-8") as f:
                     health = json.load(f)
-                
                 detalhes = health.get("detalhes", {})
-                
-                # 1. Sintaxe e Execução de Módulos
-                sin_info = detalhes.get("sintaxe", {})
-                sintaxe_ok = sin_info.get("ok", True)
-                st_sin = "OK" if sintaxe_ok else "\033[31mFALHA\033[0m"
-                print(f"  [-] Checagem de Sintaxe ........ {st_sin}")
-
-                # 2. Teste do Ollama em background
-                ol_info = detalhes.get("ollama", {})
-                ollama_ok = ol_info.get("ok", True)
-                st_ol = "OK" if ollama_ok else "\033[31mFALHA\033[0m"
-                print(f"  [-] Motor de IA (Ollama) ....... {st_ol}")
-
-                # 3. Estrutura Vital
-                est_info = detalhes.get("estrutura", {})
-                estrutura_ok = est_info.get("ok", True)
-                st_est = "OK" if estrutura_ok else "\033[31mFALHA\033[0m"
-                print(f"  [-] Arquivos do Core .......... {st_est}")
-
-                # Se qualquer um falhar no diagnóstico de fundo, altera o status geral
-                if not (sintaxe_ok and ollama_ok and estrutura_ok):
+                st_sin = "OK" if detalhes.get("sintaxe", {}).get("ok", True) else "FALHA"
+                st_ol = "OK" if detalhes.get("ollama", {}).get("ok", True) else "FALHA"
+                st_est = "OK" if detalhes.get("estrutura", {}).get("ok", True) else "FALHA"
+                out.append(f"  [-] Sintaxe ......... {st_sin}")
+                out.append(f"  [-] Ollama Bg ....... {st_ol}")
+                out.append(f"  [-] Core Files ...... {st_est}")
+                if st_sin == "FALHA" or st_ol == "FALHA" or st_est == "FALHA":
                     sistemas_ok = False
-
-                # Imprime os detalhes das falhas encontradas
-                erros_sin = sin_info.get("erros", [])
-                for err in erros_sin:
-                    print(f"      └─> \033[31m[ERRO]\033[0m {err}")
-
-                faltantes = est_info.get("faltantes", [])
-                for item in faltantes:
-                    print(f"      └─> \033[31m[FALTANDO]\033[0m Arquivo vital: {item}")
-                    
             except Exception:
-                print("  [-] Status de Integridade ...... INDISPONÍVEL (Erro de Leitura)")
+                out.append("  [-] Status .......... Erro ao ler cache")
         else:
-            print("  [-] Status de Integridade ...... ESCANEANDO EM SEGUNDO PLANO...")
+            out.append("  [-] Status .......... Escaneando...")
 
-        print("\n----------------------------------------------------")
+        out.append("\n---------------------------")
+        out.append("STATUS GERAL: 🟢 OPERACIONAL" if sistemas_ok else "STATUS GERAL: 🔴 FALHA DETECTADA")
+
+        resultado_texto = "\n".join(out)
         
-        # Indicador visual do Status Geral
-        if sistemas_ok:
-            print("STATUS GERAL: 🟢 SISTEMA OPERACIONAL E PRONTO\n")
-        else:
-            print("STATUS GERAL: 🔴 FALHA EM UM OU MAIS SISTEMAS\n")
+        # Exibe no terminal se chamado direto por ele
+        print(resultado_texto)
+        
+        # Retorna para a interface Tkinter usar direto
+        return resultado_texto
 
     def exibir_banner(self):
         exibir_banner_principal()

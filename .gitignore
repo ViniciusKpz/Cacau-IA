@@ -3,3 +3,6 @@ venv/
 output/
 __pycache__/
 */__pycache__/
+.env
+*.db
+tokens/

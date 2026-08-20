@@ -18,19 +18,19 @@ Antes de instalar, certifique-se de ter os seguintes pacotes instalados no seu s
 
 ### 1. Clonar o repositorio
 ```bash
-git clone https://github.com/ViniciusKpz/Cacau-IA.git
-cd Cacau-IA
+git clone [https://github.com/ViniciusKpz/Cacau-IA.git](https://github.com/ViniciusKpz/Cacau-IA.git) ~/.CacauIA
+cd ~/.CacauIA
 ```
 
 ### 2. Criar e ativar o ambiente virtual (venv)
 ```bash
-python -m venv venv
-source venv/bin/activate
+python -m venv "(e) .CacauIA"
+source "(e) .CacauIA/bin/activate"
 ```
 
 ### 3. Instalar as dependencias
 ```bash
-pip install -r requirements.txt
+pip install customtkinter pygame -r requirements.txt
 ```
 
 ### 4. Configurar o Ollama para resumos e chat inteligente
@@ -50,9 +50,10 @@ Para conseguir executar a CacauIA de qualquer diretorio no terminal digitando ap
 cat << 'EOF' | sudo tee /usr/local/bin/cacau > /dev/null
 #!/bin/bash
 PROJETO_DIR="$HOME/.CacauIA"
-VENV_PYTHON="$PROJETO_DIR/venv/bin/python"
+VENV_PYTHON="$PROJETO_DIR/(e) .CacauIA/bin/python"
+
 if [ -f "$VENV_PYTHON" ]; then
-    $VENV_PYTHON "$PROJETO_DIR/main.py" "$@"
+    "$VENV_PYTHON" "$PROJETO_DIR/main.py" "$@"
 else
     python3 "$PROJETO_DIR/main.py" "$@"
 fi
@@ -65,7 +66,11 @@ sudo chmod +x /usr/local/bin/cacau
 
 ## Como Usar
 
-Exemplos de comandos disponiveis na CLI:
+### Interface Gráfica (GUI)
+Para abrir o painel de controle interativo com suporte a áudio e métricas do sistema:
+
+```bash
+cacau
 
 | Comando | Descricao | Exemplo de Uso |
 | :--- | :--- | :--- |
@@ -78,6 +83,7 @@ Exemplos de comandos disponiveis na CLI:
 | app | Abre um aplicativo instalado no sistema em segundo plano | cacau app firefox |
 | ajuda | Exibe o manual de comandos | cacau ajuda |
 
+```
 ---
 
 ## Recursos do Modo Chat Interativo (cacau chat)
@@ -96,9 +102,6 @@ No modo Chat, voce conversa em linguagem natural e a IA identifica e executa aco
 
 ---
 
-## Estrutura do Projeto
-
-```text
 .CacauIA/
 ├── ASCII/
 │   ├── __init__.py   
@@ -107,14 +110,17 @@ No modo Chat, voce conversa em linguagem natural e a IA identifica e executa aco
 │   ├── ajuda.py
 │   ├── cacau.py
 │   └── ia.py
+├── interface/
+│   └── app.py              
 ├── .funcoes/
+│   ├── efeitos_sonoros/
+│   │   └── mp3cutbib.mp3    
 │   └── navegar/
 │       ├── __init__.py
 │       └── analise.py
 ├── output/
-├── main.py
+├── main.py                 
 └── requirements.txt
-```
 
 ---
 
