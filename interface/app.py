@@ -20,8 +20,9 @@ class CacauApp(ctk.CTk):
         super().__init__()
         self.fila_gui = fila_comunicacao
         self.fila_comandos = fila_comandos
+        self.criador_nome = "Operador"
         
-        self.title("CACAU IA - PAINEL DE CONTROLE v2.3")
+        self.title("CACAU IA")
         self.geometry("1100x700")
         self.minsize(950, 650)
         self.configure(fg_color=COLOR_BG)
@@ -251,11 +252,11 @@ class CacauApp(ctk.CTk):
 
     def _carregar_f1_online(self):
         try:
-            from core.f1_checker import obter_proxima_corrida_monza
-            titulo_gp, data_gp = obter_proxima_corrida_monza()
+            from core.f1_checker import obter_proxima_corrida
+            titulo_gp, data_gp = obter_proxima_corrida()
             self.after(0, lambda: self.adicionar_item_lembrete(titulo_gp, data_gp, no_topo=True))
         except Exception:
-            self.after(0, lambda: self.adicionar_item_lembrete("Próxima Corrida: GP de Monza", "06/09/2026 10:00", no_topo=True))
+            pass
 
     def adicionar_item_lembrete(self, titulo, data_hora, no_topo=False):
         card = ctk.CTkFrame(

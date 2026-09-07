@@ -2,12 +2,12 @@ import json
 import warnings
 import requests
 
-# Silencia o aviso de renomeação da biblioteca DuckDuckGo
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
 
 class IAEngine:
     def __init__(self, modelo="llama3.2", url="http://localhost:11434"):
         self.modelo = modelo
+        self.url = url
         self.url_generate = f"{url}/api/generate"
         self.url_chat = f"{url}/api/chat"
         self.disponivel = self._verificar_ollama(url)
@@ -15,11 +15,37 @@ class IAEngine:
             {"role": "system", "content": "Você é a CacauIA, uma assistente virtual focada em Linux e tecnologia. Responda de forma direta, simpática e objetiva."}
         ]
 
-    def _verificar_ollama(self, url: str) -> bool:
+    def _verificar_ollama(self, url):
+        """Verifica se o servidor do Ollama está rodando localmente."""
         try:
-            return requests.get(f"{url}/", timeout=1).status_code == 200
+            response = requests.get(url, timeout=3)
+            return response.status_code == 200
         except Exception:
             return False
+
+    def enviar_mensagem_ollama(self, mensagem_usuario):
+        """Envia mensagem para o Ollama usando o histórico simples da aplicação."""
+        if not self.disponivel:
+            return "Erro: O servidor Ollama não está rodando localmente (verifique o terminal com 'ollama serve')."
+
+        self.historico.append({"role": "user", "content": mensagem_usuario})
+
+        payload = {
+            "model": self.modelo,
+            "messages": self.historico,
+            "stream": False
+        }
+
+        try:
+            response = requests.post(self.url_chat, json=payload, timeout=30)
+            if response.status_code == 200:
+                resposta = response.json()["message"]["content"]
+                self.historico.append({"role": "assistant", "content": resposta})
+                return resposta
+        except Exception as e:
+            return f"Erro ao conectar com Ollama: {e}"
+
+        return "Erro ao processar resposta."
 
     def conversar(self, mensagem_usuario: str) -> str:
         if not self.disponivel:
